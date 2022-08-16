@@ -1,9 +1,9 @@
 Introduction
 ------------
 
-This is NiceChess, version 1.0. NiceChess is derived from Brutal Chess 0.5.2
-(http://sf.net/projects/brutalchess) a cross-platform GPL chess game
-with 3D graphics powered by OpenGL and SDL.
+This is NiceChess (https://github.com/BencsikRoland/nicechess), version 1.0.
+NiceChess is derived from Brutal Chess 0.5.2 (http://sf.net/projects/brutalchess)
+a cross-platform GPL chess game with 3D graphics powered by OpenGL and SDL.
 
 Changes
 -------
