@@ -1,0 +1,175 @@
+Introduction
+------------
+
+This is NiceChess, version 1.0. NiceChess is derived from Brutal Chess 0.5.2
+(http://sf.net/projects/brutalchess) a cross-platform GPL chess game
+with 3D graphics powered by OpenGL and SDL.
+
+Changes
+-------
+
+- renaming game to NiceChess
+- converting cpu intensive continuous draw loop into draw on change only loop
+- migrating code from SDL 1.2 to SDL 2.0
+- filtering out overloading mousemotion events
+- changing window management to allow resizing, maximizing and toggling it into fullscreen mode
+- adding background, board squares and piece colorization options
+- adding board squares texture re-colorization options
+- adding options to highlight piece, highlight square, show move arrow, animate move
+- adding font file name specification option
+- adding chess engine adding option
+- changing XboardPlayer to handle chess engines with xboard/gnuchess protocol
+- adding UciPlayer to handle chess engines with UCI protocol
+- making bishop head a little bigger one for better visibility
+- rotating knights slightly for better visibility
+- changing transparent piece move to opaque piece move
+- adding move start position highlighting
+- fixing piece move animation
+- adding minimum computer move time option
+- fixing Board::isMoveLegal() by checking if board has rook in the corner
+- fixing font loading by using signed subtraction when bitmap extends past the bottom of the line
+- fixing GameCore::destroy() to stop think thread
+- rotating board at game start if human is playing as black
+- removing thread usage for preloading media
+- removing startup logo
+- fixing GameCore::draw() by dropping selected piece if game is ended
+- changing menu key to be F1 and quit on Escape key
+- adding 1-9 level of computer difficulty and send it to engines as depth ply number
+- fixing new game start by stopping think thread before
+- merging "Game Options" and "Graphics" menu items into one "Options" menu item
+- removing video resolution changing menu items
+- changing menu drawing to keep aspect ratio regardless of window resizing
+- changing menu more opaque
+- harmonizing menu item drawing and pointed menu item detection
+- fixing [next,prev]MenuItem() by skipping collapsed menu items
+- changing menu item drawing by using its height for scaling
+- fixing XboardPlayer to start chess engine only if other player is already moved one
+- fixing chess engine startup failure handling by setting player into uninitialized state
+- fixing XboardPlayer to handle received pawn promotion move
+- fixing XboardPlayer to send correct pawn promotion piece type
+
+Building dependencies
+---------------------
+
+/usr/include/SDL2/SDL.h
+/usr/include/SDL2/SDL_image.h 
+/usr/include/GL/glu.h 
+/usr/include/freetype2/ft2build.h 
+
+yum install SDL2-devel SDL2_image-devel mesa-libGLU-devel freetype-devel
+
+Building, running and installing
+--------------------------------
+
+$ make
+$ make run
+$ make install
+$ make runInstalled
+
+Building on non-linux platform
+------------------------------
+
+You may find the buildcommands.txt useful.
+
+Command line options
+--------------------
+
+NiceChess 1.0
+Usage: nicechess [options]
+ -h
+      Print this help screen.
+ -g   WIDTHxHEIGHT+X+Y         (800x600+0+0)
+      Set window geometry.
+ -m
+      Start in maximized mode.
+ -f
+      Start in fullscreen mode.
+ -fn  FONT                     ("/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf")
+ -md  MODEL_DIRECTORY          ("/usr/share/nicechess/models/")
+ -bc  BACKGROUND_COLOR         (187 15 97)
+ -wsc WHITE_SQUARE_COLOR       (228 2 97)
+ -bsc BLACK_SQUARE_COLOR       (198 60 78)
+ -wpc WHITE_PIECE_COLOR        (36 29 96)
+ -bpc BLACK_PIECE_COLOR        (29 67 76)
+ -wsi WHITE_SQUARES_IMAGE      ("/usr/share/nicechess/art/whitesquares.png")
+ -bsi BLACK_SQUARES_IMAGE      ("/usr/share/nicechess/art/blacksquares.png")
+ -wsm WHITE_MODIFY_COLOR       (none)
+ -bsm BLACK_MODIFY_COLOR       (none)
+      Example: -wsi whitesquare.png -bsi whitesquare.png -bsm 120 50 30
+ -r
+      Set reflections on.
+ -s
+      Set shadows on.
+ -hp
+      Set highlight piece on.
+ -hs
+      Set highlight square on.
+ -shc SQUARE_HIGHLIGHT_COLOR   (45 100 100)
+ -ma
+      Set computer move animation on.
+ -mo
+      Set move arrow on.
+ -ce  NAME TYPE EXECUTABLE
+      Add chess engine.
+      Type can be: xboard, uci.
+      Example:
+        -ce Faile xboard /usr/bin/faile
+        -ce Gnuchess xboard /usr/bin/gnuchess
+        -ce Stockfish uci /usr/bin/stockfish
+ -wpt WHITE_PLAYER_TYPE        (Human)
+ -bpt BLACK_PLAYER_TYPE        (Nice)
+      Choices are: Human, Nice and added chess engine names.
+ -wpd WHITE_PLAYER_DIFFICULTY  (3)
+ -bpd BLACK_PLAYER_DIFFICULTY  (3)
+      Choices are: 1 - 9
+ -mt  TIME_MS                  (1000)
+      Set minimum computer move time.
+
+Colors are in HUE SATURATION VALUE triplet or in 0xRRGGBB format.
+Hue range:        0 - 360
+Saturation range: 0 - 100
+Value range:      0 - 100
+Texture images have to have power of two width and height.
+
+Keys:
+  F1  - Menu
+  f   - Toggle fullscreen
+  m   - Toggle maximized
+  Esc - Quit
+
+Chess engines
+-------------
+
+Chess engines can be added with the -ce option.
+
+Faile chess engine
+------------------
+
+Faile 1.4.4 (https://sourceforge.net/projects/faile/)
+does not accept "depth" command so it needs to be
+patched in order to be used with NiceChess.
+
+$ PATCHFILE=$(pwd)/faile_1.4.4_depth.patch
+$ mkdir /tmp/faile
+$ cd /tmp/faile
+$ wget -O faile_1_4_4.tar.gz https://sourceforge.net/projects/faile/files/faile/1.4.4/faile_1_4_4.tar.gz/download
+$ tar -xzf faile_1_4_4.tar.gz
+$ patch -p1 < $PATCHFILE
+$ make -f makefile.gcc FLAGS=-DANSI
+
+Gnuchess chess engine
+---------------------
+
+Gnuchess 6.2.9 (https://www.gnu.org/software/chess/)
+uses too much cpu even in easy, disabled pondering mode,
+but it can be fixed.
+
+$ PATCHFILE=$(pwd)/gnuchess_6.2.9_sleep.patch
+$ cd $HOME
+$ yumdownloader --source gnuchess
+(root)$ yum-builddep gnuchess-6.2.9-3.fc36.src.rpm
+$ rpmbuild -rp gnuchess-6.2.9-3.fc36.src.rpm
+$ cd $HOME/rpmbuild/BUILD/gnuchess-6.2.9
+$ patch -p1 < $PATCHFILE
+$ ./configure
+$ make

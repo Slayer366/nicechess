@@ -1,0 +1,12 @@
+diff -ruN gnuchess-6.2.9/src/main.cc gnuchess-6.2.9_new/src/main.cc
+--- gnuchess-6.2.9/src/main.cc	2021-07-11 09:04:06.000000000 +0115
++++ gnuchess-6.2.9_new/src/main.cc	2022-08-16 13:49:05.206988838 +0115
+@@ -516,7 +516,7 @@
+       ReadFromEngine();
+     }
+     /* Avoid using 100% CPU */
+-    usleep(100);
++    usleep(100 * 1000);
+   }
+ 
+   dbg_close();

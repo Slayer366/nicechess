@@ -1,0 +1,108 @@
+diff -ruN faile-1.4.4/book.c faile-1.4.4-new/book.c
+--- faile-1.4.4/book.c	2001-10-20 06:27:59.000000000 +0115
++++ faile-1.4.4-new/book.c	2022-08-04 09:13:43.845956716 +0115
+@@ -640,6 +640,9 @@
+   const char *move = input;
+   d_long temp_hash;
+ 
++  castle_k = castle_k;
++  castle_q = castle_q;
++
+   /* try a pawn move first: */
+   if (is_column (*move)) {
+     pawn_move = TRUE;
+@@ -941,6 +944,8 @@
+   b_hash_s b_hash;
+   bool found = FALSE;
+ 
++  found = found;
++
+   /* calculate our target: */
+   target = b_hash_mask & cur_pos.x1;
+ 
+diff -ruN faile-1.4.4/extvars.h faile-1.4.4-new/extvars.h
+--- faile-1.4.4/extvars.h	2001-10-20 06:29:10.000000000 +0115
++++ faile-1.4.4-new/extvars.h	2022-08-05 09:08:03.274873453 +0115
+@@ -34,6 +34,8 @@
+ 
+ extern char divider[50];
+ 
++extern int mindepth, maxdepth;
++
+ extern int board[144], moved[144], ep_square, white_to_move, wking_loc,
+   bking_loc, white_castled, black_castled, result, ply, pv_length[PV_BUFF],
+   history_h[144][144], pieces[33], squares[144], num_pieces, i_depth, fifty,
+diff -ruN faile-1.4.4/faile.c faile-1.4.4-new/faile.c
+--- faile-1.4.4/faile.c	2001-10-20 06:29:24.000000000 +0115
++++ faile-1.4.4-new/faile.c	2022-08-16 11:29:39.700856230 +0115
+@@ -38,6 +38,9 @@
+ char divider[50] = "-------------------------------------------------";
+ move_s dummy = {0,0,0,0,0,0,0};
+ 
++int mindepth = 3;
++int maxdepth = 10;
++
+ int board[144], moved[144], ep_square, white_to_move, wking_loc,
+   bking_loc, white_castled, black_castled, result, ply, pv_length[PV_BUFF],
+   history_h[144][144], pieces[33], squares[144], num_pieces, i_depth, fifty,
+@@ -234,6 +237,14 @@
+ 	perft (depth);
+ 	printf ("Raw nodes for depth %d: %ld\n", depth, raw_nodes);
+       }
++      else if (!strncmp (input, "depth", 5)) {
++	sscanf (input+6, "%d", &maxdepth);
++
++        if (maxdepth < 1)
++        {
++          maxdepth = 1;
++        }
++      }
+       else if (!strcmp (input, "new")) {
+ 	init_game ();
+ 	/* refresh our hash tables: */
+@@ -315,20 +326,21 @@
+       }
+       else if (!strcmp (input, "help")) {
+ 	printf ("\n%s\n\n", divider);
+-	printf ("diagram/d: toggle diagram display\n");
+-	printf ("exit/quit: terminate Faile\n");
+-	printf ("go:        make Faile play the side to move\n");
+-	printf ("new:       start a new game\n");
+-	printf ("level <x>: the xboard style command to set time\n");
++	printf ("diagram/d:   toggle diagram display\n");
++	printf ("exit/quit:   terminate Faile\n");
++	printf ("go:          make Faile play the side to move\n");
++	printf ("new:         start a new game\n");
++	printf ("level <x>:   the xboard style command to set time\n");
+ 	printf ("  <x> should be in the form: <a> <b> <c> where:\n");
+ 	printf ("  a -> moves to TC (0 if using an ICS style TC)\n");
+ 	printf ("  b -> minutes per game\n");
+ 	printf ("  c -> increment in seconds\n");
+-	printf ("nodes:     outputs the number of nodes searched\n");
+-	printf ("nps:       outputs Faile's NPS in search\n");
+-	printf ("perft <x>: compute raw nodes to depth x\n");
+-	printf ("post:      toggles thinking output\n");
+-	printf ("xboard:    put Faile into xboard mode\n");
++	printf ("nodes:       outputs the number of nodes searched\n");
++	printf ("nps:         outputs Faile's NPS in search\n");
++	printf ("perft <x>:   compute raw nodes to depth x\n");
++	printf ("post:        toggles thinking output\n");
++	printf ("xboard:      put Faile into xboard mode\n");
++	printf ("depth <ply>: search ply deep for each move\n");
+ 	printf ("\n%s\n\n", divider);
+       }
+       else if (!xb_mode) {
+diff -ruN faile-1.4.4/faile.h faile-1.4.4-new/faile.h
+--- faile-1.4.4/faile.h	2001-10-20 06:29:42.000000000 +0115
++++ faile-1.4.4-new/faile.h	2022-08-16 11:42:00.890846119 +0115
+@@ -61,8 +61,8 @@
+ #define NDEBUG
+ #include <assert.h>
+ 
+-#define maxdepth 30
+-#define mindepth 3
++//#define maxdepth 30
++//#define mindepth 3
+ #define null_red 2
+ #define FALSE 0
+ #define TRUE 1
