@@ -66,6 +66,9 @@ yum install SDL2-devel SDL2_image-devel mesa-libGLU-devel freetype-devel
 Building, running and installing
 --------------------------------
 
+Check make.sh and edit it manually if needed.
+You can set the compile parameters and default directories and files there.
+
 $ make
 $ make run
 $ make install
