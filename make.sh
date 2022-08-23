@@ -23,24 +23,32 @@ exe="$outDir/$programName"
 
 debugParameters="-g -O0"
 
-parameters=""
-parameters=$parameters" -DNICECHESS_VERSION=\"$programVersion\""
-parameters=$parameters" -DWHITE_SQUARES_IMAGE=\"$installArtDir/$whiteSqauresImage\""
-parameters=$parameters" -DBLACK_SQUARES_IMAGE=\"$installArtDir/$blackSqauresImage\""
-parameters=$parameters" -DMODELS_DIR=\"$installModelsDir/\""
-parameters=$parameters" -DFONT_FILENAME=\"$fontFileName\""
-parameters=$parameters" -D_GNU_SOURCE=1"
-parameters=$parameters" -D_REENTRANT"
-parameters=$parameters" $debugParameters"
-parameters=$parameters" -I."
-parameters=$parameters" -I/usr/include/SDL2"
-parameters=$parameters" -I/usr/include/freetype2"
-parameters=$parameters" -I/usr/include/libpng16"
-parameters=$parameters" -I/usr/include/harfbuzz"
-parameters=$parameters" -I/usr/include/glib-2.0"
-parameters=$parameters" -I/usr/lib64/glib-2.0/include"
-parameters=$parameters" -I/usr/include/sysprof-4"
-parameters=$parameters" -pthread"
+compileParameters=""
+compileParameters=$compileParameters" -DNICECHESS_VERSION=\"$programVersion\""
+compileParameters=$compileParameters" -DWHITE_SQUARES_IMAGE=\"$installArtDir/$whiteSqauresImage\""
+compileParameters=$compileParameters" -DBLACK_SQUARES_IMAGE=\"$installArtDir/$blackSqauresImage\""
+compileParameters=$compileParameters" -DMODELS_DIR=\"$installModelsDir/\""
+compileParameters=$compileParameters" -DFONT_FILENAME=\"$fontFileName\""
+compileParameters=$compileParameters" -D_GNU_SOURCE=1"
+compileParameters=$compileParameters" -D_REENTRANT"
+compileParameters=$compileParameters" $debugParameters"
+compileParameters=$compileParameters" -I."
+compileParameters=$compileParameters" -I/usr/include/SDL2"
+compileParameters=$compileParameters" -I/usr/include/freetype2"
+compileParameters=$compileParameters" -I/usr/include/libpng16"
+compileParameters=$compileParameters" -I/usr/include/harfbuzz"
+compileParameters=$compileParameters" -I/usr/include/glib-2.0"
+compileParameters=$compileParameters" -I/usr/lib64/glib-2.0/include"
+compileParameters=$compileParameters" -I/usr/include/sysprof-4"
+compileParameters=$compileParameters" -pthread"
+
+linkParameters=""
+linkParameters=$linkParameters" -lGL"
+linkParameters=$linkParameters" -lGLU"
+linkParameters=$linkParameters" -lfreetype"
+linkParameters=$linkParameters" -lSDL2"
+linkParameters=$linkParameters" -lSDL2_image"
+linkParameters=$linkParameters" -pthread"
 
 srcs=""
 srcs=$srcs" ""basicset"
@@ -206,7 +214,7 @@ makeAll()
           set -x
         fi
 
-        g++ $parameters -c -o $obj $src
+        g++ $compileParameters -c -o $obj $src
 
         exitCode=$?
 
@@ -239,15 +247,10 @@ makeAll()
         set -x
       fi
 
-      g++  -g -O0  \
-        -I/usr/include/SDL2 \
-        -D_GNU_SOURCE=1 -D_REENTRANT \
-        -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/harfbuzz -I/usr/include/glib-2.0 \
-        -I/usr/lib64/glib-2.0/include -I/usr/include/sysprof-4 \
-        -pthread \
+      g++ \
+        $linkParameters \
         -o $exe \
-        $objs \
-        -lGLU -lGL  -lSDL2 -lfreetype -lSDL2_image
+        $objs
 
       exitCode=$?
 
