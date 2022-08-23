@@ -25,6 +25,8 @@ ChessPlayer * PlayerFactory(const std::string & playertype)
   else if (playertype == "Random") {
     return new RandomPlayer();
   }
+
+#ifndef WIN32
   else {
     for(i=0; i<opts->chessengines.size(); ++i)
     {
@@ -50,6 +52,7 @@ ChessPlayer * PlayerFactory(const std::string & playertype)
       }
     }
   }
+#endif
 
   return NULL;
 }

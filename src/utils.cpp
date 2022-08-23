@@ -105,6 +105,8 @@ void printUsage()
   cerr << "      Set computer move animation on." << endl;
   cerr << " -mo" << endl;
   cerr << "      Set move arrow on." << endl;
+
+#ifndef WIN32
   cerr << " -ce  NAME TYPE EXECUTABLE" << endl;
   cerr << "      Add chess engine." << endl;
   cerr << "      Type can be: xboard, uci." << endl;
@@ -112,6 +114,8 @@ void printUsage()
   cerr << "        -ce Faile xboard /usr/bin/faile" << endl;
   cerr << "        -ce Gnuchess xboard /usr/bin/gnuchess" << endl;
   cerr << "        -ce Stockfish uci /usr/bin/stockfish" << endl;
+#endif
+
   cerr << " -wpt WHITE_PLAYER_TYPE        (Human)" << endl;
 //  cerr << "    Default: Human" << endl;
   cerr << " -bpt BLACK_PLAYER_TYPE        (Nice)" << endl;
@@ -358,6 +362,8 @@ void parseCommandLine(int argc, char* argv[])
       opts->animations = true;
     } else if(args[i] == "-mo") {
       opts->historyarrows = true;
+
+#ifndef WIN32
     } else if(args[i] == "-ce" && numParams(args,i) == 3) {
       ChessEngine chessengine;
 
@@ -375,6 +381,8 @@ void parseCommandLine(int argc, char* argv[])
       opts->chessengines.push_back(chessengine);
 
       i+=3;
+#endif
+
     } else if(args[i] == "-wpt" && numParams(args,i) == 1) {
       if (
         args[i+1] == "Nice"
