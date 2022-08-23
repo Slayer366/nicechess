@@ -10,8 +10,8 @@ whiteSqauresImage="whitesquares.png"
 blackSqauresImage="blacksquares.png"
 fontFileName="/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf"
 
-#installMainDir="/usr"
-installMainDir="/opt/chess"
+installMainDir="/usr"
+#installMainDir="/opt/chess"
 
 installBinDir="$installMainDir/bin"
 installShareDir="$installMainDir/share/$programName"
@@ -20,6 +20,7 @@ installModelsDir="$installShareDir/$modelsDir"
 
 outDir="$scriptDir/out"
 exe="$outDir/$programName"
+
 debugParameters="-g -O0"
 
 parameters=""
@@ -28,7 +29,6 @@ parameters=$parameters" -DWHITE_SQUARES_IMAGE=\"$installArtDir/$whiteSqauresImag
 parameters=$parameters" -DBLACK_SQUARES_IMAGE=\"$installArtDir/$blackSqauresImage\""
 parameters=$parameters" -DMODELS_DIR=\"$installModelsDir/\""
 parameters=$parameters" -DFONT_FILENAME=\"$fontFileName\""
-parameters=$parameters" -DHAVE_CONFIG_H"
 parameters=$parameters" -D_GNU_SOURCE=1"
 parameters=$parameters" -D_REENTRANT"
 parameters=$parameters" $debugParameters"

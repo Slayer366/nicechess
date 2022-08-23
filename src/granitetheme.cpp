@@ -10,7 +10,6 @@
 #include <string>
 
 #include "boardtheme.h"
-#include "config.h"
 #include "gamecore.h"
 #include "options.h"
 #include "SDL_opengl.h"

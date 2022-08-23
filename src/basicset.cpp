@@ -6,7 +6,6 @@
  * Authors : Mike Cook, Joe Flint, Neil Pankey, Bencsik Roland
  **************************************************************************/
 
-#include "config.h"
 #include "gamecore.h"
 #include "options.h"
 #include "pieceset.h"

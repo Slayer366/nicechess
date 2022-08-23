@@ -9,7 +9,6 @@
 #include "boardtheme.h"
 #include "chessgame.h"
 #include "chessplayer.h"
-#include "config.h"
 #include "fontloader.h"
 #include "gamecore.h"
 #include "menu.h"
