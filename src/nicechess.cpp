@@ -217,7 +217,7 @@ int callLoad(void * gc)
 }
 
 /*
- * Come on, its main.
+ * Come on, it's main.
  */
 int main(int argc, char *argv[])
 {
@@ -371,6 +371,7 @@ int main(int argc, char *argv[])
 
           d1printf("filtered\n");
         }
+        core->requestRepaint();
       }
 
       isrefreshwindowsize = false;
