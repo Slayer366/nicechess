@@ -47,4 +47,4 @@ INCLUDES = -DPREFIX_DIR=\"$(bcdatadir)\" \
 	  -DWHITE_SQUARES_IMAGE=\"$(artdir)/whitesquares.png\" \
 	  -DBLACK_SQUARES_IMAGE=\"$(artdir)/blacksquares.png\" \
 	  -DMODELS_DIR=\"$(modelsdir)\" \
-	  -DFONT_FILENAME=\"/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf\""
+	  -DFONT_FILENAME=\"$(bcdatadir)/fonts/LiberationSans-Regular.ttf\""

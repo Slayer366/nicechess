@@ -1,14 +1,16 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 
-scriptDir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+scriptDir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 programName="nicechess"
 programVersion="1.0"
 artDir="art"
 modelsDir="models"
-whiteSqauresImage="whitesquares.png"
-blackSqauresImage="blacksquares.png"
-fontFileName="/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf"
+whiteSquaresImage="whitesquares.png"
+blackSquaresImage="blacksquares.png"
+#fontFileName="/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf"
+fontFileName="fonts/LiberationSans-Regular.ttf"
 
 installMainDir="/usr"
 #installMainDir="/opt/chess"
@@ -21,68 +23,79 @@ installModelsDir="$installShareDir/$modelsDir"
 outDir="$scriptDir/out"
 exe="$outDir/$programName"
 
-debugParameters="-g -O0"
+debugParameters="-g -O0 -fsigned-char"
+releaseParameters="-O2 -fsigned-char"
 
 compileParameters=""
-compileParameters=$compileParameters" -DNICECHESS_VERSION=\"$programVersion\""
-compileParameters=$compileParameters" -DWHITE_SQUARES_IMAGE=\"$installArtDir/$whiteSqauresImage\""
-compileParameters=$compileParameters" -DBLACK_SQUARES_IMAGE=\"$installArtDir/$blackSqauresImage\""
-compileParameters=$compileParameters" -DMODELS_DIR=\"$installModelsDir/\""
-compileParameters=$compileParameters" -DFONT_FILENAME=\"$fontFileName\""
-compileParameters=$compileParameters" -D_GNU_SOURCE=1"
-compileParameters=$compileParameters" -D_REENTRANT"
-compileParameters=$compileParameters" $debugParameters"
-compileParameters=$compileParameters" -I."
-compileParameters=$compileParameters" -I/usr/include/SDL2"
-compileParameters=$compileParameters" -I/usr/include/freetype2"
-compileParameters=$compileParameters" -I/usr/include/libpng16"
-compileParameters=$compileParameters" -I/usr/include/harfbuzz"
-compileParameters=$compileParameters" -I/usr/include/glib-2.0"
-compileParameters=$compileParameters" -I/usr/lib64/glib-2.0/include"
-compileParameters=$compileParameters" -I/usr/include/sysprof-4"
-compileParameters=$compileParameters" -pthread"
+compileParameters+=" -DNICECHESS_VERSION=\"$programVersion\""
+#compileParameters+=" -DWHITE_SQUARES_IMAGE=\"$installArtDir/$whiteSquaresImage\""
+#compileParameters+=" -DBLACK_SQUARES_IMAGE=\"$installArtDir/$blackSquaresImage\""
+#compileParameters+=" -DMODELS_DIR=\"$installModelsDir/\""
+compileParameters+=" -DWHITE_SQUARES_IMAGE=\"$artDir/$whiteSquaresImage\""
+compileParameters+=" -DBLACK_SQUARES_IMAGE=\"$artDir/$blackSquaresImage\""
+compileParameters+=" -DMODELS_DIR=\"$modelsDir/\""
+compileParameters+=" -DFONT_FILENAME=\"$fontFileName\""
+compileParameters+=" -D_GNU_SOURCE=1 -D_REENTRANT"
+compileParameters+=" $debugParameters"
+#compileParameters+=" $releaseParameters"
+compileParameters+=" -I."
+compileParameters+=" -I/usr/include/SDL2"
+compileParameters+=" -I/usr/include/freetype2"
+compileParameters+=" -I/usr/include/libpng16"
+compileParameters+=" -I/usr/include/harfbuzz"
+compileParameters+=" -I/usr/include/glib-2.0"
+compileParameters+=" -I/usr/include/glm"
+compileParameters+=" -I/usr/lib64/glib-2.0/include"
+compileParameters+=" -I/usr/include/sysprof-4"
+compileParameters+=" $(pkg-config --cflags sdl2 SDL2_image freetype2)"
+compileParameters+=" -fsigned-char -pthread"
 
 linkParameters=""
-linkParameters=$linkParameters" -lGL"
-linkParameters=$linkParameters" -lGLU"
-linkParameters=$linkParameters" -lfreetype"
-linkParameters=$linkParameters" -lSDL2"
-linkParameters=$linkParameters" -lSDL2_image"
-linkParameters=$linkParameters" -pthread"
+#linkParameters+=" -lGL"
+#linkParameters+=" -lGLU"
+#linkParameters+=" -lfreetype"
+#linkParameters+=" -lSDL2"
+#linkParameters+=" -lSDL2_image"
+#linkParameters+=" -lm"
+#linkParameters+=" -lpng"
+#linkParameters+=" -pthread"
+linkParameters+=" $(pkg-config --libs sdl2 SDL2_image freetype2)"
+linkParameters+=" -lGL -lm -lpng -lz -fsigned-char -pthread"
 
-srcs=""
-srcs=$srcs" ""basicset"
-srcs=$srcs" ""bitboard"
-srcs=$srcs" ""board"
-srcs=$srcs" ""boardmove"
-srcs=$srcs" ""boardposition"
-srcs=$srcs" ""boardtheme"
-srcs=$srcs" ""chessgame"
-srcs=$srcs" ""chessgamestate"
-srcs=$srcs" ""chessplayer"
-srcs=$srcs" ""debugset"
-srcs=$srcs" ""fontloader"
-srcs=$srcs" ""gamecore"
-srcs=$srcs" ""granitetheme"
-srcs=$srcs" ""humanplayer"
-#srcs=$srcs" ""md3model"
-srcs=$srcs" ""menu"
-srcs=$srcs" ""menuitem"
-srcs=$srcs" ""nicechess"
-srcs=$srcs" ""niceplayer"
-srcs=$srcs" ""objfile"
-srcs=$srcs" ""options"
-srcs=$srcs" ""piece"
-srcs=$srcs" ""pieceset"
-#srcs=$srcs" ""q3charmodel"
-#srcs=$srcs" ""q3set"
-srcs=$srcs" ""randomplayer"
-srcs=$srcs" ""texture"
-srcs=$srcs" ""timer"
-srcs=$srcs" ""uciplayer"
-srcs=$srcs" ""utils"
-srcs=$srcs" ""xboardplayer"
-srcs=$srcs" ""vector"
+srcs="
+basicset
+bitboard
+board
+boardmove
+boardposition
+boardtheme
+chessgame
+chessgamestate
+chessplayer
+debugset
+fontloader
+gamecore
+granitetheme
+humanplayer
+menu
+menuitem
+nicechess
+niceplayer
+objfile
+options
+piece
+pieceset
+randomplayer
+texture
+timer
+uciplayer
+utils
+xboardplayer
+vector
+"
+#srcs+=" ""md3model"
+#srcs+=" ""q3charmodel"
+#srcs+=" ""q3set"
 
 isDependencyChanged()
 {
@@ -161,7 +174,7 @@ makeAll()
 
   cd src
 
-  mkdir -p $outDir
+  mkdir -p "$outDir"
 
   objs=""
 
@@ -248,9 +261,12 @@ makeAll()
       fi
 
       g++ \
-        $linkParameters \
         -o $exe \
-        $objs
+        $objs \
+        $linkParameters
+
+    sleep 1
+    mv "$outDir/nicechess" "$scriptDir/."
 
       exitCode=$?
 
@@ -274,6 +290,7 @@ makeClean()
   fi
 
   rm -f $outDir/*
+  rm -f $scriptDir/nicechess
 
   exitCode=$?
 
@@ -309,146 +326,147 @@ makeRun()
   return $exitCode
 }
 
-makeInstall()
-{
-  local exitCode
+#makeInstall()
+#{
+#  local exitCode
+#
+#  exitCode=0
+#
+#  makeAll
+#
+#  exitCode=$?
+#
+#  if [ $exitCode -ne 0 ]; then
+#    return $exitCode
+#  fi
+#
+#  if [ "$bIsVerbose" -eq 1 ]; then
+#    set -x
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    install -d -m 755 $installBinDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    install -d -m 755 $installShareDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    install -d -m 755 $installArtDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    install -d -m 755 $installModelsDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    install -m 755 $exe $installBinDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    install -m 644 $modelsDir/*.obj $installModelsDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    install -m 644 $artDir/$whiteSquaresImage $installArtDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    install -m 644 $artDir/$blackSquaresImage $installArtDir
+#    exitCode=$?
+#  fi
+#
+#  set +x
+#
+#  return $exitCode
+#}
 
-  exitCode=0
+#makeUninstall()
+#{
+#  local exitCode
+#
+#  exitCode=0
+#
+#  if [ "$bIsVerbose" -eq 1 ]; then
+#    set -x
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    rm -f $installArtDir/$blackSquaresImage
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    rm -f $installArtDir/$whiteSquaresImage
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    rm -f $installModelsDir/*.obj
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ]; then
+#    rm -f $installBinDir/$programName
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ] && [ -d $installModelsDir ]; then
+#    rmdir $installModelsDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ] && [ -d $installArtDir ]; then
+#    rmdir $installArtDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ] && [ -d $installShareDir ]; then
+#    rmdir $installShareDir
+#    exitCode=$?
+#  fi
+#
+#  if [ $exitCode -eq 0 ] && [ -d $installBinDir ]; then
+#    rmdir $installBinDir
+#    exitCode=$?
+#  fi
+#
+#  set +x
+#
+#  return $exitCode
+#}
 
-  makeAll
-
-  exitCode=$?
-
-  if [ $exitCode -ne 0 ]; then
-    return $exitCode
-  fi
-
-  if [ "$bIsVerbose" -eq 1 ]; then
-    set -x
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    install -d -m 755 $installBinDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    install -d -m 755 $installShareDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    install -d -m 755 $installArtDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    install -d -m 755 $installModelsDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    install -m 755 $exe $installBinDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    install -m 644 $modelsDir/*.obj $installModelsDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    install -m 644 $artDir/$whiteSqauresImage $installArtDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    install -m 644 $artDir/$blackSqauresImage $installArtDir
-    exitCode=$?
-  fi
-
-  set +x
-
-  return $exitCode
-}
-
-makeUninstall()
-{
-  local exitCode
-
-  exitCode=0
-
-  if [ "$bIsVerbose" -eq 1 ]; then
-    set -x
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    rm -f $installArtDir/$blackSqauresImage
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    rm -f $installArtDir/$whiteSqauresImage
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    rm -f $installModelsDir/*.obj
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ]; then
-    rm -f $installBinDir/$programName
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ] && [ -d $installModelsDir ]; then
-    rmdir $installModelsDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ] && [ -d $installArtDir ]; then
-    rmdir $installArtDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ] && [ -d $installShareDir ]; then
-    rmdir $installShareDir
-    exitCode=$?
-  fi
-
-  if [ $exitCode -eq 0 ] && [ -d $installBinDir ]; then
-    rmdir $installBinDir
-    exitCode=$?
-  fi
-
-  set +x
-
-  return $exitCode
-}
-
-makeRunInstalled()
-{
-  local exitCode
-
-  exitCode=0
-
-  if [ "$bIsVerbose" -eq 1 ]; then
-    set -x
-  fi
-
-  $installBinDir/$programName
-
-  exitCode=$?
-
-  set +x
-
-  return $exitCode
-}
+#makeRunInstalled()
+#{
+#  local exitCode
+#
+#  exitCode=0
+#
+#  if [ "$bIsVerbose" -eq 1 ]; then
+#    set -x
+#  fi
+#
+#  $installBinDir/$programName
+#
+#  exitCode=$?
+#
+#  set +x
+#
+#  return $exitCode
+#}
 
 printTargets()
 {
-  echo "Usage: $0 [V=1] [all|run|install|clean]"
+#  echo "Usage: $0 [V=1] [all|run|install|clean]"
+  echo "Usage: $0 [V=1] [all|run|clean]"
 
   return 0
 }
@@ -479,9 +497,9 @@ main()
     "all")          makeAll ;;
     "clean")        makeClean ;;
     "run")          makeRun ;;
-    "install")      makeInstall ;;
-    "uninstall")    makeUninstall ;;
-    "runInstalled") makeRunInstalled ;;
+#    "install")      makeInstall ;;
+#    "uninstall")    makeUninstall ;;
+#    "runInstalled") makeRunInstalled ;;
     *)              printTargets ;;
   esac
 

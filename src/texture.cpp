@@ -9,10 +9,11 @@
 
 #include "texture.h"
 #include "SDL_image.h"
-#include "GL/glu.h"
 
 #define d1printf(...)
 //#define d1printf(...) printf("%s:%d:", __FUNCTION__, __LINE__); printf(__VA_ARGS__);
+
+typedef void (APIENTRY *PFNGLGENERATEMIPMAP)(GLenum target);
 
 using namespace std;
 
@@ -173,12 +174,42 @@ GLuint Texture::loadSurface( SDL_Surface * surf )
   // Bind to the new handle
   glBindTexture( GL_TEXTURE_2D, newtext );
   // Load the actual data
-  gluBuild2DMipmaps( GL_TEXTURE_2D, surf->format->BytesPerPixel, surf->w, 
-          surf->h, getSurfaceFormat(), GL_UNSIGNED_BYTE,
-          surf->pixels );
+//  gluBuild2DMipmaps( GL_TEXTURE_2D, surf->format->BytesPerPixel, surf->w, 
+//          surf->h, getSurfaceFormat(), GL_UNSIGNED_BYTE,
+//          surf->pixels );
+
+  glTexImage2D(GL_TEXTURE_2D, 0, surf->format->BytesPerPixel, surf->w, surf->h, 0,
+               getSurfaceFormat(), GL_UNSIGNED_BYTE, surf->pixels);
 
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+    // Try runtime glGenerateMipmap first
+    PFNGLGENERATEMIPMAP generateMipmap = nullptr;
+    generateMipmap = (PFNGLGENERATEMIPMAP)SDL_GL_GetProcAddress("glGenerateMipmap");
+    if (!generateMipmap)
+        generateMipmap = (PFNGLGENERATEMIPMAP)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
+
+    if (generateMipmap)
+    {
+        // Success! Generate mipmaps at runtime
+        generateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        // glGenerateMipmap not available; fallback to GLU if you want
+        #ifdef HAVE_GLU
+            #include "GL/glu.h"
+            gluBuild2DMipmaps( GL_TEXTURE_2D, surf->format->BytesPerPixel, surf->w, 
+                    surf->h, getSurfaceFormat(), GL_UNSIGNED_BYTE,
+                    surf->pixels );
+        #else
+            std::cerr << "Warning: glGenerateMipmap not available; mipmaps skipped\n";
+        #endif
+    }
+
+    m_glloaded = true;
+    m_texture = newtext;
 
   return newtext;
 }

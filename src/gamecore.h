@@ -89,6 +89,16 @@ class GameCore {
   void requestRepaint();
   bool isNeedRepaint();
 
+  /** 
+   * Custom Cursor handling
+   */
+  void drawCursorOverlay();
+  bool m_drawCursor = true;
+  GLuint m_cursorTex = 0;
+  int m_cursorWidth;
+  int m_cursorHeight;
+  SDL_Surface *cursorsurface;
+
  private:
 
   static GameCore * m_instance;

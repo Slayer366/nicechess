@@ -12,7 +12,6 @@
 #include "menuitem.h"
 #include "options.h"
 #include "SDL_opengl.h"
-#include "GL/glu.h"
 
 #include <string>
 #include <iostream>
@@ -38,13 +37,13 @@ void push2D()
   {
     halfdiff = (width / height - 1) / 2;
 
-    gluOrtho2D(-halfdiff, 1.0 + halfdiff, 0.0, 1.0);
+    glOrtho(-halfdiff, 1.0 + halfdiff, 0.0, 1.0, -1.0, 1.0);
   }
   else
   {
     halfdiff = (height / width - 1) / 2;
 
-    gluOrtho2D(0.0, 1.0, -halfdiff, 1.0 + halfdiff);
+    glOrtho(0.0, 1.0, -halfdiff, 1.0 + halfdiff, -1.0, 1.0);
   }
 
   glMatrixMode(GL_MODELVIEW);
@@ -231,12 +230,15 @@ bool Menu::handleEvent(SDL_Event& e)
   }
   else if (e.type == SDL_MOUSEMOTION && e.motion.state == 0) {
     vector<MenuItem*>::const_iterator mii = getMousePointedMenuItem(e);
-    if (mii == m_curr_menuitem || mii == (*m_curr_set).second.end())
-      return true;
-    (*m_curr_menuitem)->hoverOut();
-    m_curr_menuitem = mii;
-    (*m_curr_menuitem)->hoverIn();
-    return true;
+//    if (mii == m_curr_menuitem || mii == (*m_curr_set).second.end())
+//      return true;
+      if (mii != m_curr_menuitem && mii != (*m_curr_set).second.end()) {
+          (*m_curr_menuitem)->hoverOut();
+          m_curr_menuitem = mii;
+          (*m_curr_menuitem)->hoverIn();
+      }
+//    return true;
+      return false;
   }
   else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
     vector<MenuItem*>::const_iterator mii = getMousePointedMenuItem(e);

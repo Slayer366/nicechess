@@ -19,7 +19,6 @@
 #include "SDL_image.h"
 #include "SDL_opengl.h"
 #include "SDL_thread.h"
-#include "GL/glu.h"
 
 #include "boardtheme.h"
 #include "chessgame.h"
@@ -81,7 +80,28 @@ void setIcon()
 
   SDL_FreeSurface(surface);
 }
-   
+
+// Replacement for gluPerspective
+void glPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
+{
+    // Convert fovy from degrees to radians
+    GLfloat f = 1.0f / tan(fovy * 0.5f * M_PI / 180.0f);
+
+    GLfloat m[16] = {0};
+
+    m[0]  = f / aspect;  // [0][0]
+    m[5]  = f;           // [1][1]
+    m[10] = (zFar + zNear) / (zNear - zFar);  // [2][2]
+    m[11] = -1.0f;                       // [2][3]
+    m[14] = (2.0f * zFar * zNear) / (zNear - zFar);  // [3][2]
+    m[15] = 0.0f;
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glLoadMatrixf(m);
+    glMatrixMode(GL_MODELVIEW);
+}
+
 /**
  * Resizes the game window, handles updating all OpenGL stuff
  * @param width - new width of the window
@@ -98,8 +118,8 @@ bool resizeWindow(int width, int height)
   
   glViewport(0, 0, width, height);  // Set up our viewport.
   glMatrixMode(GL_PROJECTION);    // Change to the projection matrix and set our viewing volume.
-  glLoadIdentity();  
-  gluPerspective(30.0f, aspectRatio, 0.1f, 151.0f);  // Sets our persepective.
+  glLoadIdentity();
+  glPerspective(30.0f, aspectRatio, 0.1f, 151.0f);
   glMatrixMode(GL_MODELVIEW);  // Change to the modelview matrix and set out viewing volume.
   glLoadIdentity();
 

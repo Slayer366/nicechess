@@ -18,9 +18,12 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 #include "SDL_thread.h"
+#include "SDL_image.h"
 #include "texture.h"
 #include "utils.h"
-#include "GL/glu.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -113,6 +116,7 @@ bool GameCore::loadGL()
   for(int i = 0; i < 64; i++) {
     blank[i] = 0;
   }
+  SDL_ShowCursor(SDL_DISABLE);
 
   m_blankcur = SDL_CreateCursor((Uint8*)blank, (Uint8*)blank, 8, 8, 0, 0);
   m_glloaded = true;
@@ -138,6 +142,58 @@ void GameCore::unloadGL()
   SDL_FreeCursor(m_blankcur);
 
   m_glloaded = false;
+}
+
+// For custom mouse cursor
+void GameCore::drawCursorOverlay()
+{
+  if (m_drawCursor == true) {
+    float x = (float)m_mousex;
+    float y = (float)m_mousey;
+    int w = m_cursorWidth;
+    int h = m_cursorHeight;
+
+    glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT | GL_TEXTURE_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, m_options->windowwidth, m_options->windowheight, 0, -1, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_COLOR_MATERIAL);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glBindTexture(GL_TEXTURE_2D, m_cursorTex);
+
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex2f(x,     y);
+        glTexCoord2f(1, 0); glVertex2f(x + w, y);
+        glTexCoord2f(1, 1); glVertex2f(x + w, y + h);
+        glTexCoord2f(0, 1); glVertex2f(x,     y + h);
+    glEnd();
+
+//    glBindTexture(GL_TEXTURE_2D, 0);
+//    glDisable(GL_BLEND);
+//    glDisable(GL_TEXTURE_2D);
+//    glEnable(GL_CULL_FACE);
+//    glEnable(GL_DEPTH_TEST);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopAttrib();
+  }
 }
 
 void GameCore::draw()
@@ -243,15 +299,18 @@ void GameCore::draw()
     drawLoadingScreen();
     // Extra delay during the loading screen to avoid choking the CPU
     SDL_Delay(25);
-  }    
+  }
+    // Draw custom cursor in screen space (2D overlay)
+    drawCursorOverlay();
 }
 
 void GameCore::deselectMoveStartPosition()
 {
-  SDL_SetCursor(m_defaultcur);
+  //SDL_SetCursor(m_defaultcur);
   m_theme->setMoveStartPosition(BoardPosition());
   m_set->deselectPosition();
   m_firstclick.invalidate();
+  m_drawCursor = true;
 }
 
 bool GameCore::handleEvent(SDL_Event& e)
@@ -311,6 +370,7 @@ bool GameCore::handleEvent(SDL_Event& e)
         m_theme->hoverPosition(BoardPosition());
         m_set->hoverPosition(m_game.getState(), BoardPosition());
         SDL_ShowCursor(SDL_DISABLE);
+        m_drawCursor = false;
 //        SDL_WM_GrabInput(SDL_GRAB_ON);
       }
     }
@@ -351,7 +411,8 @@ bool GameCore::handleEvent(SDL_Event& e)
             if (m_game.getCurrentPlayer()->isHuman()) {
               m_set->drawPromotionSelector(true);
               this->setIsWaitingForPromotion(true);
-              SDL_SetCursor(m_defaultcur);
+              //SDL_SetCursor(m_defaultcur);
+              m_drawCursor = true;
             }
             else {
               // TODO - Get promotion from AI
@@ -381,6 +442,7 @@ bool GameCore::handleEvent(SDL_Event& e)
           // Make sure player is selecting his own piece
           if(m_game.getTurn() == m_game.getBoard().getPiece(m_mousepos)->color()) {
             SDL_SetCursor(m_blankcur);
+            m_drawCursor = false;
             m_firstclick = m_mousepos;
             m_theme->setMoveStartPosition(m_mousepos);
             m_set->selectPosition(m_mousepos);
@@ -394,7 +456,9 @@ bool GameCore::handleEvent(SDL_Event& e)
   else if (e.type == SDL_MOUSEBUTTONUP) {
     if (e.button.button == SDL_BUTTON_RIGHT && m_rotate) {
       m_rotate = false;
-      SDL_ShowCursor(SDL_ENABLE);
+      //SDL_ShowCursor(SDL_ENABLE);
+      SDL_ShowCursor(SDL_DISABLE); // Not using system cursor in favor of custom cursor
+      m_drawCursor = true;
 //      SDL_WM_GrabInput(SDL_GRAB_OFF);
 //      SDL_WarpMouse(m_mousex, m_mousey);
     }
@@ -586,6 +650,44 @@ bool GameCore::preload()
 //
 //  m_logotexture.loadGL();
 
+/**
+ * Custom cursor ("art/cursor.png")
+ */
+  SDL_ShowCursor(SDL_DISABLE);
+
+    cursorsurface = IMG_Load("art/cursor.png");
+    if (!cursorsurface) {
+      cerr << "Failed to load custom mouse cursor: " << IMG_GetError() << endl;
+    } else {
+        m_cursorWidth  = cursorsurface->w;
+        m_cursorHeight = cursorsurface->h;
+
+        GLenum texture_format;
+        GLint nOfColors = cursorsurface->format->BytesPerPixel;
+        if (nOfColors == 4) {     // contains alpha channel
+            texture_format = (cursorsurface->format->Rmask == 0x000000ff) ? GL_RGBA : GL_BGRA;
+        } else if (nOfColors == 3) { // no alpha channel
+            texture_format = (cursorsurface->format->Rmask == 0x000000ff) ? GL_RGB : GL_BGR;
+        } else {
+            cerr << "Unsupported image format for cursor" << endl;
+            texture_format = GL_BGRA; // force fallback for glTexImage2D in case it takes a dump
+            SDL_FreeSurface(cursorsurface);
+        }
+
+        glGenTextures(1, &m_cursorTex);
+        glBindTexture(GL_TEXTURE_2D, m_cursorTex);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, texture_format, m_cursorWidth, m_cursorHeight,
+                 0, texture_format, GL_UNSIGNED_BYTE, cursorsurface->pixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        SDL_FreeSurface(cursorsurface);
+    }
+
   m_preloaded = true;
   return true;
 }
@@ -757,7 +859,7 @@ void GameCore::drawReflections()
   glEnable( GL_STENCIL_TEST );
   glStencilOp( GL_REPLACE, GL_REPLACE, GL_REPLACE );
   glStencilFunc( GL_ALWAYS, 1, 0xffffffff );
-  
+
   glBegin( GL_QUADS );
     glNormal3d( 0, 7, 0 );
     glVertex3d( 0.0, 0.0,  0.0 );
@@ -940,12 +1042,12 @@ void GameCore::updateMouseBoardPos()
 
   // Draw a large quad to project the mouse position onto
   glBegin(GL_QUADS);
-  glVertex3d(-13, 0,  9.5);
-  glVertex3d( 20, 0,  9.5);
-  glVertex3d( 20, 0, -13);
-  glVertex3d(-13, 0, -13);
+      glVertex3d(-13, 0,  9.5);
+      glVertex3d( 20, 0,  9.5);
+      glVertex3d( 20, 0, -13);
+      glVertex3d(-13, 0, -13);
   glEnd();
-  
+
   GLdouble mvmatrix[16];
   GLdouble pjmatrix[16];
   GLint viewport[4];
@@ -957,21 +1059,42 @@ void GameCore::updateMouseBoardPos()
 
   // Measure mouse y coordinate from the bottom of the window
   int mousey = viewport[3] - m_mousey;
-  GLfloat mousedepth;
+//  GLfloat mousedepth;
 
   // Get the depth of the single pixel under the mouse
-  glReadPixels(m_mousex, mousey, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, 
-      &mousedepth);
+//  glReadPixels(m_mousex, mousey, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, 
+//      &mousedepth);
 
-  GLdouble x, y, z;
+//  GLdouble x, y, z;
   // Project the mouse position into board coordinates
-  gluUnProject(m_mousex, mousey, mousedepth, mvmatrix, pjmatrix, viewport, 
-      &x, &y, &z);
+//  gluUnProject(m_mousex, mousey, mousedepth, mvmatrix, pjmatrix, viewport, 
+//      &x, &y, &z);
 
-  m_mouseboardx = x;
-  m_mouseboardy = z;
+    glm::mat4 model = glm::make_mat4(mvmatrix);
+    glm::mat4 proj  = glm::make_mat4(pjmatrix);
+    glm::vec4 view  = glm::make_vec4(viewport);
 
-  m_mousepos = BoardPosition((int)floor(x), -(int)ceil(z));
+    // Near and far points in NDC
+    glm::vec3 screenNear(m_mousex, mousey, 0.0f);
+    glm::vec3 screenFar (m_mousex, mousey, 1.0f);
+
+    glm::vec3 nearPos = glm::unProject(screenNear, model, proj, view);
+    glm::vec3 farPos  = glm::unProject(screenFar,  model, proj, view);
+
+    // Ray direction
+    glm::vec3 dir = glm::normalize(farPos - nearPos);
+
+    // Intersection with y = 0 plane
+    float t = -nearPos.y / dir.y;
+    glm::vec3 world = nearPos + t * dir;
+
+//    m_mouseboardx = x;
+//    m_mouseboardy = z;
+    m_mouseboardx = world.x;
+    m_mouseboardy = world.z;
+
+//    m_mousepos = BoardPosition((int)floor(x), -(int)ceil(z));
+    m_mousepos = BoardPosition((int)floor(world.x), -(int)ceil(world.z));
 }
 
 int callThink(void *pt)
