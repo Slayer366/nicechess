@@ -82,54 +82,39 @@ Command line options
 
 NiceChess 1.0
 Usage: nicechess [options]
- -h
-      Print this help screen.
- -g   WIDTHxHEIGHT+X+Y         (800x600+0+0)
-      Set window geometry.
- -m
-      Start in maximized mode.
- -f
-      Start in fullscreen mode.
- -fn  FONT                     ("/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf")
- -md  MODEL_DIRECTORY          ("/usr/share/nicechess/models/")
+ -h   Print this help screen.
+ -g   Set window geometry WxH+X+Y. (Example: -g 800x600+0+0)
+ -m   Start in maximized mode.
+ -f   Start in fullscreen mode.
+ -fn  FONT                     ("fonts/LiberationSans-Regular.ttf")
+ -md  MODEL_DIRECTORY          ("models/")
  -bc  BACKGROUND_COLOR         (187 15 97)
  -wsc WHITE_SQUARE_COLOR       (228 2 97)
  -bsc BLACK_SQUARE_COLOR       (198 60 78)
  -wpc WHITE_PIECE_COLOR        (36 29 96)
  -bpc BLACK_PIECE_COLOR        (29 67 76)
- -wsi WHITE_SQUARES_IMAGE      ("/usr/share/nicechess/art/whitesquares.png")
- -bsi BLACK_SQUARES_IMAGE      ("/usr/share/nicechess/art/blacksquares.png")
- -wsm WHITE_MODIFY_COLOR       (none)
- -bsm BLACK_MODIFY_COLOR       (none)
-      Example: -wsi whitesquare.png -bsi whitesquare.png -bsm 120 50 30
- -r
-      Set reflections on.
- -s
-      Set shadows on.
- -hp
-      Set highlight piece on.
- -hs
-      Set highlight square on.
+ -wsi WHITE_SQUARES_IMAGE      ("art/whitesquares.png")
+ -bsi BLACK_SQUARES_IMAGE      ("art/blacksquares.png")
+ -wsm WHITE_MODIFY_COLOR       (Example: -wsm 228 8 100)
+ -bsm BLACK_MODIFY_COLOR       (Example: -bsm 120 50 30)
+ -r   Set reflections on.
+ -s   Set shadows on.
+ -hp  Set highlight piece on.
+ -hs  Set highlight square on.
  -shc SQUARE_HIGHLIGHT_COLOR   (45 100 100)
- -ma
-      Set computer move animation on.
- -mo
-      Set move arrow on.
+ -ma  Set computer move animation on.
+ -mo  Set move arrow on.
  -ce  NAME TYPE EXECUTABLE
-      Add chess engine.
-      Type can be: xboard, uci.
-      Example:
-        -ce Faile xboard /usr/bin/faile
-        -ce Gnuchess xboard /usr/bin/gnuchess
-        -ce Stockfish uci /usr/bin/stockfish
+      Add chess engine. Type can be: xboard, uci.
+      Examples: -ce Faile xboard /usr/bin/faile
+                -ce Gnuchess xboard /usr/bin/gnuchess
+                -ce Stockfish uci /usr/bin/stockfish
  -wpt WHITE_PLAYER_TYPE        (Human)
  -bpt BLACK_PLAYER_TYPE        (Nice)
       Choices are: Human, Nice and added chess engine names.
- -wpd WHITE_PLAYER_DIFFICULTY  (3)
- -bpd BLACK_PLAYER_DIFFICULTY  (3)
-      Choices are: 1 - 9
- -mt  TIME_MS                  (1000)
-      Set minimum computer move time.
+ -wpd WHITE_PLAYER_DIFFICULTY  (3) (Choices are: 1 - 9)
+ -bpd BLACK_PLAYER_DIFFICULTY  (3) (Choices are: 1 - 9)
+ -mt  TIME_MS  Set minimum computer move time.  (1000)
 
 Colors are in HUE SATURATION VALUE triplet or in 0xRRGGBB format.
 Hue range:        0 - 360
@@ -155,27 +140,32 @@ Faile 1.4.4 (https://sourceforge.net/projects/faile/)
 does not accept "depth" command so it needs to be
 patched in order to be used with NiceChess.
 
-$ PATCHFILE=$(pwd)/faile_1.4.4_depth.patch
-$ mkdir /tmp/faile
-$ cd /tmp/faile
-$ wget -O faile_1_4_4.tar.gz https://sourceforge.net/projects/faile/files/faile/1.4.4/faile_1_4_4.tar.gz/download
-$ tar -xzf faile_1_4_4.tar.gz
-$ patch -p1 < $PATCHFILE
-$ make -f makefile.gcc FLAGS=-DANSI
+```bash
+export PATCHFILE=$(pwd)/faile_1.4.4_depth.patch
+mkdir -p /tmp/faile
+cd /tmp/faile
+wget -O faile_1_4_4.tar.gz https://sourceforge.net/projects/faile/files/faile/1.4.4/faile_1_4_4.tar.gz/download
+tar -xzf faile_1_4_4.tar.gz
+patch -p1 < "$PATCHFILE"
+make -j$(nproc) -f makefile.gcc FLAGS=-DANSI
+```
 
 Gnuchess chess engine
 ---------------------
 
 Gnuchess 6.2.9 (https://www.gnu.org/software/chess/)
-uses too much cpu even in easy, disabled pondering mode,
-but it can be fixed.
+consumes too much CPU even in easy mode with pondering
+disabled, but this can be corrected by applying the
+patch below.
 
-$ PATCHFILE=$(pwd)/gnuchess_6.2.9_sleep.patch
-$ cd $HOME
-$ yumdownloader --source gnuchess
-(root)$ yum-builddep gnuchess-6.2.9-3.fc36.src.rpm
-$ rpmbuild -rp gnuchess-6.2.9-3.fc36.src.rpm
-$ cd $HOME/rpmbuild/BUILD/gnuchess-6.2.9
-$ patch -p1 < $PATCHFILE
-$ ./configure
-$ make
+```bash
+export PATCHFILE=$(pwd)/gnuchess_6.2.9_sleep.patch
+cd $HOME
+sudo apt update
+apt-get source gnuchess
+sudo apt-get build-dep gnuchess
+cd gnuchess-6.2.9
+patch -p1 < "$PATCHFILE"
+./configure
+make -j$(nproc)
+```
