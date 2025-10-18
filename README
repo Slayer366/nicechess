@@ -57,11 +57,11 @@ Building dependencies
 ---------------------
 
 /usr/include/SDL2/SDL.h
-/usr/include/SDL2/SDL_image.h 
-/usr/include/GL/glu.h 
+/usr/include/SDL2/SDL_image.h
 /usr/include/freetype2/ft2build.h 
+/usr/include/glm/glm.hpp
 
-yum install SDL2-devel SDL2_image-devel mesa-libGLU-devel freetype-devel
+sudo apt install libsdl2-dev libsdl2-image-dev libglm-dev libfreetype6-dev
 
 Building, running and installing
 --------------------------------
@@ -70,9 +70,7 @@ Check make.sh and edit it manually if needed.
 You can set the compile parameters and default directories and files there.
 
 $ make
-$ make run
-$ make install
-$ make runInstalled
+$ make clean
 
 Building on non-linux platform
 ------------------------------
