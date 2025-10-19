@@ -61,7 +61,9 @@ Building dependencies
 /usr/include/freetype2/ft2build.h  
 /usr/include/glm/glm.hpp  
   
+```bash
 sudo apt install libsdl2-dev libsdl2-image-dev libglm-dev libfreetype6-dev  
+```
   
 Building, running and installing  
 --------------------------------  
@@ -70,7 +72,7 @@ Check make.sh and edit it manually if needed.
 You can set the compile parameters and default directories and files there.  
   
 ```bash
-make
+make -j$(nproc)
 make clean
 ```
   
@@ -82,6 +84,7 @@ You may find the buildcommands.txt useful.
 Command line options  
 --------------------  
   
+```
 NiceChess 1.0  
 Usage: nicechess [options]  
  -h   Print this help screen.  
@@ -129,6 +132,7 @@ Keys:
   f   - Toggle fullscreen  
   m   - Toggle maximized  
   Esc - Quit  
+```
   
 Chess engines  
 -------------  
