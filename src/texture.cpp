@@ -168,49 +168,55 @@ void Texture::unloadGL()
 
 GLuint Texture::loadSurface( SDL_Surface * surf )
 {
-  GLuint newtext;
+  SDL_Surface *conv = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_BGRA32, 0);
+
+  GLenum texture_format;
+  GLint nOfColors = surf->format->BytesPerPixel;
+  if (nOfColors == 4) {     // contains alpha channel
+      texture_format = (surf->format->Rmask == 0x000000ff) ? GL_RGBA : GL_BGRA;
+  } else if (nOfColors == 3) { // no alpha channel
+      texture_format = (surf->format->Rmask == 0x000000ff) ? GL_RGB : GL_BGR;
+  } else {
+      cerr << "Unsupported image format" << endl;
+      texture_format = GL_BGRA; // force fallback for glTexImage2D in case it takes a dump
+  }
+
+  GLuint newtext = 0;
+
   // Create a new texture handle
   glGenTextures( 1, &newtext );
+
+  glActiveTexture(GL_TEXTURE0);
+
   // Bind to the new handle
   glBindTexture( GL_TEXTURE_2D, newtext );
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
   // Load the actual data
-//  gluBuild2DMipmaps( GL_TEXTURE_2D, surf->format->BytesPerPixel, surf->w, 
-//          surf->h, getSurfaceFormat(), GL_UNSIGNED_BYTE,
-//          surf->pixels );
+  glTexImage2D(GL_TEXTURE_2D, 0, texture_format, conv->w, conv->h, 0,
+               texture_format, GL_UNSIGNED_BYTE, conv->pixels);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, surf->format->BytesPerPixel, surf->w, surf->h, 0,
-               getSurfaceFormat(), GL_UNSIGNED_BYTE, surf->pixels);
+  typedef void (APIENTRY * PFNGLGENERATEMIPMAP)(GLenum);
+  PFNGLGENERATEMIPMAP generateMipmap = nullptr;
+  generateMipmap = (PFNGLGENERATEMIPMAP)SDL_GL_GetProcAddress("glGenerateMipmap");
+  if (!generateMipmap) generateMipmap = (PFNGLGENERATEMIPMAP)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
+  if (!generateMipmap) generateMipmap = (PFNGLGENERATEMIPMAP)SDL_GL_GetProcAddress("glGenerateMipmapARB");
 
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+  if (generateMipmap) {
+      cerr << "\nGenerating mipmaps on GPU\n" << endl;
+      generateMipmap(GL_TEXTURE_2D);
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+  } else {
+      cerr << "\nglGenerateMipmap not available; mipmaps skipped\n" << endl;
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+  }
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    // Try runtime glGenerateMipmap first
-    PFNGLGENERATEMIPMAP generateMipmap = nullptr;
-    generateMipmap = (PFNGLGENERATEMIPMAP)SDL_GL_GetProcAddress("glGenerateMipmap");
-    if (!generateMipmap)
-        generateMipmap = (PFNGLGENERATEMIPMAP)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
-
-    if (generateMipmap)
-    {
-        // Success! Generate mipmaps at runtime
-        generateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        // glGenerateMipmap not available; fallback to GLU if you want
-        #ifdef HAVE_GLU
-            #include "GL/glu.h"
-            gluBuild2DMipmaps( GL_TEXTURE_2D, surf->format->BytesPerPixel, surf->w, 
-                    surf->h, getSurfaceFormat(), GL_UNSIGNED_BYTE,
-                    surf->pixels );
-        #else
-            std::cerr << "Warning: glGenerateMipmap not available; mipmaps skipped\n";
-        #endif
-    }
-
-    m_glloaded = true;
-    m_texture = newtext;
-
+  SDL_FreeSurface(conv);
   return newtext;
 }
 
