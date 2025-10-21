@@ -194,7 +194,7 @@ GLuint Texture::loadSurface( SDL_Surface * surf )
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   // Load the actual data
-  glTexImage2D(GL_TEXTURE_2D, 0, texture_format, conv->w, conv->h, 0,
+  glTexImage2D(GL_TEXTURE_2D, 0, conv->format->BytesPerPixel, conv->w, conv->h, 0,
                texture_format, GL_UNSIGNED_BYTE, conv->pixels);
 
   typedef void (APIENTRY * PFNGLGENERATEMIPMAP)(GLenum);
